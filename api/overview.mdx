@@ -1,7 +1,7 @@
 ---
-title: "UniLink REST API overview and conventions"
+title: "UniLink REST API: base URL, conventions, and all endpoints"
 sidebarTitle: "Overview"
-description: "The UniLink API is a local Express server on port 3001. All endpoints live under /api and communicate using JSON request and response bodies."
+description: "The UniLink API is an Express server on port 3001. All ten endpoints live under /api and accept and return JSON. No auth tokens are required."
 ---
 
 The UniLink REST API is a lightweight Express server that runs entirely on your local machine at `http://localhost:3001`. Every endpoint is mounted under the `/api` prefix, accepts JSON request bodies, and always responds with JSON — there is no HTML, XML, or form-encoded support. The server is intentionally minimal: it is a course prototype backed by a single SQLite file, designed to run alongside the React frontend with a single `npm run dev` command.

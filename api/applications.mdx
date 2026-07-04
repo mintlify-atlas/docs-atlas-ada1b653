@@ -1,7 +1,7 @@
 ---
 title: "Applications API — submit and list internship applications"
 sidebarTitle: "Applications"
-description: "GET /api/applications returns all applications for the student, and POST /api/applications submits a new application. Duplicate submissions return the existing record."
+description: "GET /api/applications returns all applications for studentId 1. POST /api/applications submits a new one; duplicates return the existing record."
 ---
 
 Two endpoints manage internship applications for the single registered student (`studentId = 1`). You can retrieve the full list of the student's applications, or submit a new one by providing a `jobId`. The server handles duplicate submissions gracefully — applying to the same job a second time returns the already-existing record rather than creating a duplicate entry.
@@ -10,11 +10,7 @@ Two endpoints manage internship applications for the single registered student (
 
 ## GET /api/applications
 
-Returns all application records where `studentId = 1`.
-
-<ParamField query="(none)" type="">
-  This endpoint accepts no query parameters or request body.
-</ParamField>
+Returns all application records where `studentId = 1`. This endpoint accepts no query parameters or request body.
 
 ### Response
 

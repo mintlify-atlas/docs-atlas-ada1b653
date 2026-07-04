@@ -28,7 +28,6 @@ The student profile is loaded from `GET /api/profile/student` on application mou
 | `certifications` | object[] | `{ name, issuer, year }` |
 | `experience` | object[] | `{ id, role, org, period, desc }` |
 | `education` | object | `{ degree, university, years }` |
-| `savedJobs` | number[] | IDs of saved job listings |
 
 ### Editing the student profile
 
@@ -64,6 +63,8 @@ The company profile is loaded from `GET /api/profile/company`. It represents the
 | `location` | string | City |
 | `bio` | string | Short recruiter bio |
 | `skills` | string[] | Recruiter skills |
+| `experience` | object[] | `{ id, role, org, period, desc }` |
+| `education` | object | `{ degree, university, years }` |
 
 ### Editing the company profile
 

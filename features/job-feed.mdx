@@ -40,34 +40,19 @@ A **Limpiar** button appears automatically in the filter row whenever at least o
 
 ## Job card fields
 
-Each card in the two-column grid displays:
+Each card in the two-column grid displays the following fields:
 
 | Field | Description |
 |-------|-------------|
+| `type` | Badge: **Interna** (gold) or **Externa** (muted) |
 | `title` | Role title — rendered as the card heading |
 | `company` | Hiring organisation |
-| `location` | City and workplace mode string, e.g. `"Lima, Híbrido"` |
-| `modality` | Presencial / Híbrido / Remoto |
+| `location` | City and workplace string, e.g. `"Lima, Híbrido"` |
 | `salary` | Formatted salary string, e.g. `"S/ 1,800 / mes"` |
-| `type` | Badge: **Interna** (gold) or **Externa** (muted) |
-| `posted` | Human-readable posting age, e.g. `"Hace 2 días"` |
-| `deadline` | Application deadline in ISO format |
-| `duration` | Contract length, e.g. `"3 meses"` |
-| `hoursPerWeek` | Weekly commitment in hours |
 | `applicants` | Number of students who have already applied |
 | `skills` | Up to three skill tags shown as inline badges |
 
 Clicking any card navigates to `/jobs/:id` for the full detail view.
-
-## Job status badges
-
-Every listing carries a `status` field that reflects its current availability:
-
-| Value | Label | Meaning |
-|-------|-------|---------|
-| `abierto` | Abierto | Accepting applications |
-| `por_cerrar` | Por cerrar | Deadline approaching — apply soon |
-| `cerrado` | Cerrado | No longer accepting applications |
 
 ## API reference
 

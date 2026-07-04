@@ -10,23 +10,28 @@ UniLink is organised as a monorepo with three `package.json` files. The root pac
 
 ```text
 unilink/
-├── package.json          # root: npm run dev via concurrently
-├── server/               # backend
-│   ├── index.js          # Express routes (/api/*)
-│   ├── db.js             # SQLite schema + auto-seed
-│   ├── seedData.js       # demo data
-│   └── data.sqlite       # generated at runtime
-└── sanmarcos-jobs/       # frontend
+├── package.json              # root: npm run dev via concurrently
+├── server/                   # backend
+│   ├── index.js              # Express routes (/api/*)
+│   ├── db.js                 # SQLite schema + auto-seed
+│   ├── seedData.js           # demo data
+│   └── data.sqlite           # generated at runtime
+└── sanmarcos-jobs/           # frontend
+    ├── index.html
     └── src/
-        ├── App.jsx             # React Router routes
+        ├── main.jsx               # app entry point — mounts <AppDataProvider>
+        ├── App.jsx                # React Router route definitions
         ├── context/
-        │   └── AppDataContext.jsx  # global state
+        │   └── AppDataContext.jsx # global state (jobs, profiles, session)
         ├── lib/
-        │   └── api.js          # HTTP client functions
-        ├── components/         # Navbar, GlowInput, Select
-        └── pages/              # LoginPage, FeedPage, JobDetailPage,
-                                # NewJobPage, ProfilePage, EditProfilePage,
-                                # CvPrintPage
+        │   ├── api.js             # fetch-based HTTP client
+        │   └── useLocalStorageState.js  # hook for localStorage persistence
+        ├── data/
+        │   └── mockData.js        # static reference data
+        ├── components/            # Navbar, GlowInput, Select
+        └── pages/                 # LoginPage, FeedPage, JobDetailPage,
+                                   # NewJobPage, ProfilePage, EditProfilePage,
+                                   # CvPrintPage
 ```
 
 ## How the two processes communicate

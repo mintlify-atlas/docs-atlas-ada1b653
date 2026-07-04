@@ -4,7 +4,7 @@ sidebarTitle: "Applications"
 description: "UniLink tracks every application a student submits, storing status, job reference, and date applied — visible from the student's profile feed."
 ---
 
-Applications are the link between students and job listings. Every time a student clicks **Postular** on a job detail page, UniLink creates an application record that persists in the SQLite database. That record carries a lifecycle status that a company or administrator can advance over time — from initial review, through interview, to a final accepted or rejected outcome. Students can monitor all of their applications from the **Mis postulaciones** card on their profile page.
+Applications are the link between students and job listings. Every time a student clicks **Postular** on a job detail page, UniLink creates an application record that persists in the SQLite database. That record carries a lifecycle status that can be updated directly in the database while testing or through a future company dashboard. Students can monitor all of their applications from the **Mis postulaciones** card on their profile page.
 
 ## Application record
 
@@ -18,12 +18,13 @@ Applications are the link between students and job listings. Every time a studen
 
 ## Application status values
 
-| Value | Meaning |
-|-------|---------|
-| `en_revision` | Application received and under review — the default status on creation |
-| `entrevista` | Student has been invited to interview |
-| `rechazado` | Application has been rejected |
-| `aceptado` | Application has been accepted |
+The following status values are recognised by the frontend and mapped to Spanish labels in the **Mis postulaciones** card:
+
+| Value | Display label | Meaning |
+|-------|--------------|---------|
+| `en_revision` | En revisión | Application received and under review — the default status on creation |
+| `entrevista` | Entrevista | Student has been invited to interview |
+| `rechazado` | Rechazado | Application has been rejected |
 
 <Note>
   Status transitions are not yet exposed through the frontend UI. The `status` column can be updated directly in the SQLite database (`server/data.sqlite`) while testing, or via a future company dashboard feature.

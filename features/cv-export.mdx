@@ -1,16 +1,16 @@
 ---
-title: "Export your UniLink student profile as a PDF CV"
+title: "Export your UniLink profile as a PDF CV"
 sidebarTitle: "CV Export"
-description: "UniLink generates a print-ready CV layout from the student profile data, letting you download it as a PDF using the browser's native print dialog."
+description: "UniLink generates a print-ready CV layout from the active profile data, letting you download it as a PDF using the browser's native print dialog."
 ---
 
-The `/profile/cv` route renders a clean, print-optimised view of the student's profile data — no external tools or services required. The page is served by `CvPrintPage.jsx`, which reads the same profile data that powers the rest of the app and formats it into a structured, black-and-white CV layout designed to survive the browser's print pipeline intact. The print dialog opens automatically 300 milliseconds after the page loads, so you can move straight from clicking the button to saving the file.
+The `/profile/cv` route renders a clean, print-optimised view of the current user's profile data — no external tools or services required. The page is served by `CvPrintPage.jsx`, which reads the same profile data that powers the rest of the app and formats it into a structured, black-and-white CV layout designed to survive the browser's print pipeline intact. The print dialog opens automatically 300 milliseconds after the page loads, so you can move straight from clicking the button to saving the file. Both student and company (recruiter) accounts have access to this page — the layout adapts to whichever role is logged in.
 
 ## How to export your CV
 
 <Steps>
   <Step title="Navigate to your profile">
-    Log in as a student and go to `/profile` — or click **Mi Perfil** in the navigation bar.
+    Log in and go to `/profile` — or click **Mi Perfil** in the navigation bar.
   </Step>
   <Step title="Click Descargar CV">
     Click the **Descargar CV** button in the top-right corner of your profile header. The app navigates to `/profile/cv`.
@@ -25,19 +25,18 @@ The `/profile/cv` route renders a clean, print-optimised view of the student's p
 
 ## CV sections
 
-The export page renders every section of the student profile in a single-column layout:
+The export page renders the profile data in a single-column layout. Sections marked "conditional" only appear when the underlying data array is non-empty.
 
-| Section | Source fields |
-|---------|---------------|
-| Header | `name`, `career`, `email`, `phone`, `location` |
-| Sobre mí | `bio` |
-| Habilidades | `skills` (dot-separated list) |
-| Experiencia | `experience[]` — role, organisation, period, description |
-| Educación | `education.degree`, `education.university`, `education.years` |
-| Certificaciones | `certifications[]` — name, issuer, year (shown only when non-empty) |
-| Idiomas | `languages[]` — language and level pairs (shown only when non-empty) |
-
-Faculty and semester are displayed on the regular profile page but are omitted from the CV layout to keep it employer-facing rather than academic.
+| Section | Source fields | Notes |
+|---------|---------------|-------|
+| Header | `name` (or `contactName`), career/role title, `email`, `phone`, `location`, `website` | `website` shown only for company accounts |
+| Sobre mí | `bio` | Always shown |
+| Empresa | `companyName`, `industry`, `companyDescription` | Company accounts only |
+| Habilidades | `skills` | Dot-separated list |
+| Experiencia | `experience[]` — role, organisation, period, description | Always shown |
+| Educación | `education.degree`, `education.university`, `education.years` | Always shown |
+| Certificaciones | `certifications[]` — name, issuer, year | Conditional |
+| Idiomas | `languages[]` — language and level pairs | Conditional |
 
 <Note>
   The CV page is a **live render** of your current profile data. If you have recently updated your name, skills, bio, or any other editable field, make sure to save those changes on `/profile/edit` before opening the CV page — the export will always reflect whatever is stored in the database at the moment the page loads.

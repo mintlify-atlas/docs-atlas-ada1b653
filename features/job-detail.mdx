@@ -1,33 +1,31 @@
 ---
 title: "View job details and apply for internships"
 sidebarTitle: "Job Detail"
-description: "The job detail page shows the full internship description, requirements, benefits, and skills, and lets students apply with a single click."
+description: "The job detail page shows the full internship description, requirements, and required skills, and lets students apply with a single click."
 ---
 
-The `/jobs/:id` route renders the complete profile of a single internship listing. Where the feed card shows a summary, the detail page exposes the full description, a numbered requirements list, benefits, and all required skills — plus the primary action for students: applying with a single button click. Company-role accounts see this same page for any listing they have published, and they gain access to the "Nueva oferta" flow to create new listings.
+The `/jobs/:id` route renders the complete profile of a single internship listing. Where the feed card shows a summary, the detail page exposes the full description, a numbered requirements list, and all required skills — plus the primary action for students: applying with a single button click. Company-role accounts see this same page for any listing they have published, and they gain access to the **Nueva oferta** flow to create new listings.
 
 ## Fields displayed
 
-The page assembles its content from a single job record. All fields below are rendered on the detail page:
+The page assembles its content from a single job record. The header metadata strip shows four key facts; the three content cards below it hold the full listing body.
+
+### Header metadata strip
 
 | Field | Description |
 |-------|-------------|
-| `title` | Role title shown as the page heading |
-| `company` | Hiring organisation |
 | `location` | City and workplace string, e.g. `"Lima, Híbrido"` |
-| `type` | `interna` (gold badge) or `externa` (muted badge) |
-| `modality` | Presencial / Híbrido / Remoto |
-| `area` | Functional area, e.g. `"Tecnología"` |
 | `salary` | Formatted salary string, e.g. `"S/ 1,800 / mes"` |
-| `posted` | Human-readable posting age |
-| `deadline` | Application deadline (ISO date) |
-| `duration` | Contract length, e.g. `"3 meses"` |
-| `hoursPerWeek` | Weekly commitment in hours |
-| `description` | Full role description (prose) |
-| `requirements` | Ordered list of requirements |
-| `benefits` | List of offered benefits |
-| `skills` | Required skill tags |
-| `applicants` | Current applicant count |
+| `posted` | Human-readable posting age, e.g. `"Hace 2 días"` |
+| `applicants` | Current number of applicants |
+
+### Content cards
+
+| Card | Field | Description |
+|------|-------|-------------|
+| Descripción del puesto | `description` | Full prose description of the role |
+| Requisitos | `requirements` | Numbered list of requirements |
+| Habilidades requeridas | `skills` | Skill tags displayed as inline badges |
 
 ## Applying to a listing
 
@@ -68,15 +66,14 @@ Content-Type: application/json
 |-------|------|-------|
 | `title` | string | Job title |
 | `company` | string | Auto-populated from the company profile (`companyName`) |
-| `location` | string | e.g. `"Lima, Híbrido"` |
 | `type` | `interna` / `externa` | Listing type |
 | `modality` | `Presencial` / `Híbrido` / `Remoto` | Work mode |
-| `area` | string | e.g. `"Tecnología"` |
-| `salary` | string | Formatted automatically — e.g. `"S/ 1,800 / mes"` |
-| `salaryNum` | number | Numeric salary entered in the form; used for feed filtering |
-| `deadline` | date | YYYY-MM-DD |
-| `duration` | string | e.g. `"3 meses"` |
-| `hoursPerWeek` | number | Weekly hours |
+| `area` | string | Functional area, e.g. `"Tecnología"` |
+| `location` | string | e.g. `"Lima, Presencial"` |
+| `salaryNum` | number | Monthly salary in soles; formatted automatically as `"S/ X / mes"` |
+| `hoursPerWeek` | number | Weekly hours commitment |
+| `duration` | string | Contract length, e.g. `"6 meses"` |
+| `deadline` | date | Application deadline in `YYYY-MM-DD` format |
 | `description` | string | Full role description |
 | `requirements` | string[] | One requirement per line in the form; stored as a JSON array |
 | `benefits` | string[] | One benefit per line; stored as a JSON array |

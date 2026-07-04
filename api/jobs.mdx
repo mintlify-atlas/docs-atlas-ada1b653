@@ -1,7 +1,7 @@
 ---
 title: "Jobs API — list, retrieve, and create internship listings"
 sidebarTitle: "Jobs"
-description: "Three endpoints manage job listings: GET /api/jobs returns all listings, GET /api/jobs/:id returns one, and POST /api/jobs creates a new listing for empresa accounts."
+description: "Three endpoints manage listings: GET /api/jobs lists all, GET /api/jobs/:id fetches one, and POST /api/jobs creates a listing for empresa accounts."
 ---
 
 The Jobs API exposes three endpoints for working with internship listings in UniLink. You can retrieve the full catalogue of postings, fetch a single offer by its ID, or — if you are authenticated as an `empresa` account — publish a brand-new listing. Internally, `requirements`, `benefits`, and `skills` are stored as JSON strings in SQLite and are automatically parsed into arrays before being returned.
@@ -10,11 +10,7 @@ The Jobs API exposes three endpoints for working with internship listings in Uni
 
 ## GET /api/jobs
 
-Returns every job listing in the database, ordered by `id` ascending.
-
-<ParamField query="(none)" type="">
-  This endpoint accepts no query parameters or request body.
-</ParamField>
+Returns every job listing in the database, ordered by `id` ascending. This endpoint accepts no query parameters or request body.
 
 ### Response
 
