@@ -1,0 +1,85 @@
+---
+title: "Track internship applications in UniLink"
+sidebarTitle: "Applications"
+description: "UniLink tracks every application a student submits, storing status, job reference, and date applied — visible from the student's profile feed."
+---
+
+Applications are the link between students and job listings. Every time a student clicks **Postular** on a job detail page, UniLink creates an application record that persists in the SQLite database. That record carries a lifecycle status that a company or administrator can advance over time — from initial review, through interview, to a final accepted or rejected outcome. Students can monitor all of their applications from the **Mis postulaciones** card on their profile page.
+
+## Application record
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer | Auto-incremented primary key |
+| `studentId` | integer | Always `1` in the current prototype (single student account) |
+| `jobId` | integer | References the `jobs` table — the listing that was applied to |
+| `status` | string | Current lifecycle stage (see status values below) |
+| `appliedDate` | string | ISO date of submission — `YYYY-MM-DD` |
+
+## Application status values
+
+| Value | Meaning |
+|-------|---------|
+| `en_revision` | Application received and under review — the default status on creation |
+| `entrevista` | Student has been invited to interview |
+| `rechazado` | Application has been rejected |
+| `aceptado` | Application has been accepted |
+
+<Note>
+  Status transitions are not yet exposed through the frontend UI. The `status` column can be updated directly in the SQLite database (`server/data.sqlite`) while testing, or via a future company dashboard feature.
+</Note>
+
+## Student view — Mis postulaciones
+
+Once a student has applied to one or more listings, the **Mis postulaciones** card appears on the `/profile` page. Each row in the list shows:
+
+- The job title (clickable — navigates to `/jobs/:id`)
+- The hiring company and application date
+- A status badge reflecting the current `status` value
+
+The list is populated by joining the `applications` array from `AppDataContext` with the corresponding entries in the `jobs` array, filtered to only include applications where the referenced job still exists.
+
+## Company view — Ofertas publicadas
+
+Company-role accounts see an **Ofertas publicadas** card on their profile page instead of the applications list. This card shows every job listing where `postedBy === 'company'`, along with its current applicant count. Clicking a listing navigates to its detail page.
+
+## Submitting an application
+
+```http
+POST /api/applications
+Content-Type: application/json
+
+{ "jobId": 6 }
+```
+
+A successful first-time submission returns:
+
+```json
+{
+  "id": 3,
+  "studentId": 1,
+  "jobId": 6,
+  "status": "en_revision",
+  "appliedDate": "2025-06-01"
+}
+```
+
+with **HTTP 201 Created**.
+
+## Idempotency
+
+Re-submitting an application for a job the student has already applied to does **not** create a duplicate record. The backend detects the existing `(studentId, jobId)` pair and returns the original application object with **HTTP 200 OK** instead of 201. The frontend mirrors this behaviour: `applyToJob` in `AppDataContext` only appends the returned record to the local `applications` array if no entry with the same `jobId` already exists.
+
+This means it is safe to call `POST /api/applications` more than once for the same job without causing data integrity issues.
+
+## Retrieving all applications
+
+```http
+GET /api/applications
+```
+
+Returns the full list of application records for the current student (id = 1). The response is an array of application objects in the format shown above.
+
+## API reference
+
+See the [API — Applications](/api/applications) reference for the complete endpoint specification, including error responses and status codes.

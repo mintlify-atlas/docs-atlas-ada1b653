@@ -1,0 +1,96 @@
+{
+  "projectType": "saas",
+  "projectName": "UniLink",
+  "projectDescription": "A LinkedIn-style internship portal for UNMSM university students, connecting them with internal and external job opportunities through a full-stack React + Express application.",
+  "theme": "luma",
+  "primaryColor": "#c4983a",
+  "lightColor": null,
+  "darkColor": "#141412",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "demo-accounts"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/job-feed",
+              "features/job-detail",
+              "features/profiles",
+              "features/applications",
+              "features/cv-export"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "architecture/overview",
+              "architecture/database",
+              "architecture/frontend"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api/overview"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/auth",
+              "api/jobs",
+              "api/profiles",
+              "api/applications"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Dual-role authentication (student and company accounts)",
+    "Job feed with filters by type, modality, salary range, and recency",
+    "Student and company profile management",
+    "Job application tracking with status updates",
+    "Company job posting for empresa-role accounts",
+    "Printable CV export via browser print dialog",
+    "Auto-seeded SQLite database with 14 sample job listings",
+    "Single-command dev startup via concurrently (frontend + backend)"
+  ],
+  "publicApiSurface": [
+    "POST /api/login",
+    "GET /api/jobs",
+    "GET /api/jobs/:id",
+    "POST /api/jobs",
+    "GET /api/profile/student",
+    "PUT /api/profile/student",
+    "GET /api/profile/company",
+    "PUT /api/profile/company",
+    "GET /api/applications",
+    "POST /api/applications",
+    "login(email, password)",
+    "getJobs()",
+    "getJob(id)",
+    "createJob(job, role)",
+    "getStudentProfile()",
+    "updateStudentProfile(patch)",
+    "getCompanyProfile()",
+    "updateCompanyProfile(patch)",
+    "getApplications()",
+    "applyToJob(jobId)"
+  ]
+}

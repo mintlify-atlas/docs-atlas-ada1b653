@@ -1,0 +1,321 @@
+---
+title: "Jobs API — list, retrieve, and create internship listings"
+sidebarTitle: "Jobs"
+description: "Three endpoints manage job listings: GET /api/jobs returns all listings, GET /api/jobs/:id returns one, and POST /api/jobs creates a new listing for empresa accounts."
+---
+
+The Jobs API exposes three endpoints for working with internship listings in UniLink. You can retrieve the full catalogue of postings, fetch a single offer by its ID, or — if you are authenticated as an `empresa` account — publish a brand-new listing. Internally, `requirements`, `benefits`, and `skills` are stored as JSON strings in SQLite and are automatically parsed into arrays before being returned.
+
+---
+
+## GET /api/jobs
+
+Returns every job listing in the database, ordered by `id` ascending.
+
+<ParamField query="(none)" type="">
+  This endpoint accepts no query parameters or request body.
+</ParamField>
+
+### Response
+
+A JSON array of job objects. Each object contains the following fields:
+
+<ResponseField name="id" type="number">
+  Auto-assigned primary key for the listing.
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  Job title, e.g. `"Asistente de Investigación — IA"`.
+</ResponseField>
+
+<ResponseField name="company" type="string">
+  Employer name and optional department, e.g. `"UNMSM · Ing. Sistemas"`.
+</ResponseField>
+
+<ResponseField name="location" type="string">
+  Human-readable city and modality string, e.g. `"Lima, Presencial"`.
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  Whether the internship is internal to the university or external. One of `interna` or `externa`.
+</ResponseField>
+
+<ResponseField name="modality" type="string">
+  Work modality. One of `Presencial`, `Híbrido`, or `Remoto`.
+</ResponseField>
+
+<ResponseField name="area" type="string">
+  Professional area of the role, e.g. `"Tecnología"` or `"Administración"`.
+</ResponseField>
+
+<ResponseField name="salary" type="string">
+  Display string for the monthly stipend, e.g. `"S/ 1,200 / mes"`.
+</ResponseField>
+
+<ResponseField name="salaryNum" type="number">
+  Numeric value of the monthly salary in Peruvian soles, used for filtering and sorting.
+</ResponseField>
+
+<ResponseField name="posted" type="string">
+  Human-readable relative posting date, e.g. `"Hace 3 días"`.
+</ResponseField>
+
+<ResponseField name="daysAgo" type="number">
+  Number of days since the listing was published.
+</ResponseField>
+
+<ResponseField name="deadline" type="string">
+  Application deadline in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="duration" type="string">
+  Length of the internship, e.g. `"3 meses"`.
+</ResponseField>
+
+<ResponseField name="hoursPerWeek" type="number">
+  Required hours per week.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current listing status. One of `abierto`, `por_cerrar`, or `cerrado`.
+</ResponseField>
+
+<ResponseField name="initials" type="string">
+  Two-letter initials used for the company avatar, e.g. `"TC"`.
+</ResponseField>
+
+<ResponseField name="color" type="string">
+  Hex color code for the company avatar background, e.g. `"#4f46e5"`.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Full plain-text description of the role and responsibilities.
+</ResponseField>
+
+<ResponseField name="requirements" type="string[]">
+  List of candidate requirements, e.g. `["Cursando 6to semestre o más"]`.
+</ResponseField>
+
+<ResponseField name="benefits" type="string[]">
+  List of benefits offered, e.g. `["Constancia de prácticas"]`.
+</ResponseField>
+
+<ResponseField name="skills" type="string[]">
+  Technical or soft skills expected, e.g. `["Python", "Machine Learning"]`.
+</ResponseField>
+
+<ResponseField name="applicants" type="number">
+  Number of students who have applied to this listing.
+</ResponseField>
+
+<ResponseField name="postedBy" type="string">
+  Email address of the empresa account that created the listing.
+</ResponseField>
+
+### Example request
+
+```bash
+curl http://localhost:3001/api/jobs
+```
+
+### Example response
+
+```json
+[
+  {
+    "id": 1,
+    "title": "Asistente de Investigación — IA",
+    "company": "UNMSM · Ing. Sistemas",
+    "location": "Lima, Presencial",
+    "type": "interna",
+    "modality": "Presencial",
+    "area": "Tecnología",
+    "salary": "S/ 1,200 / mes",
+    "salaryNum": 1200,
+    "status": "abierto",
+    "requirements": ["Cursando 6to semestre o más"],
+    "benefits": ["Constancia de prácticas"],
+    "skills": ["Python", "Machine Learning"]
+  }
+]
+```
+
+---
+
+## GET /api/jobs/:id
+
+Returns the full details of a single job listing identified by its numeric `id`.
+
+### Path parameter
+
+<ParamField path="id" type="number" required>
+  The integer ID of the job listing to retrieve.
+</ParamField>
+
+### Response
+
+Returns the matching job object (same shape as a single element from `GET /api/jobs`) on success, or a `404` error if no listing exists with the given ID.
+
+<ResponseField name="error" type="string">
+  Present only on a 404 response. Value: `"Oferta no encontrada."`
+</ResponseField>
+
+### Example request
+
+```bash
+curl http://localhost:3001/api/jobs/1
+```
+
+### Error response (404)
+
+```json
+{
+  "error": "Oferta no encontrada."
+}
+```
+
+---
+
+## POST /api/jobs
+
+Creates a new internship listing. The request **must** include the header `x-role: empresa`; any other value — or omitting the header entirely — returns a `403 Forbidden` error.
+
+<Warning>
+  This endpoint is restricted to empresa accounts. Requests without the `x-role: empresa` header will be rejected with HTTP 403.
+</Warning>
+
+### Request body
+
+<ParamField body="title" type="string" required>
+  Job title for the listing.
+</ParamField>
+
+<ParamField body="company" type="string" required>
+  Employer name and optional department, formatted as `"Name · Department"`.
+</ParamField>
+
+<ParamField body="location" type="string" required>
+  City and modality string shown in the feed card, e.g. `"Lima, Remoto"`.
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  Internship type: `interna` for university-published roles, `externa` for company-published roles.
+</ParamField>
+
+<ParamField body="modality" type="string" required>
+  Work modality: `Presencial`, `Híbrido`, or `Remoto`.
+</ParamField>
+
+<ParamField body="area" type="string" required>
+  Professional area of the role, e.g. `"Tecnología"`.
+</ParamField>
+
+<ParamField body="salary" type="string" required>
+  Human-readable salary string, e.g. `"S/ 1,500 / mes"`.
+</ParamField>
+
+<ParamField body="salaryNum" type="number" required>
+  Numeric monthly salary in soles, used for filtering.
+</ParamField>
+
+<ParamField body="deadline" type="string" required>
+  Application deadline in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField body="duration" type="string" required>
+  Duration of the internship, e.g. `"3 meses"`.
+</ParamField>
+
+<ParamField body="hoursPerWeek" type="number" required>
+  Weekly hour commitment.
+</ParamField>
+
+<ParamField body="description" type="string" required>
+  Full description of the role and its responsibilities.
+</ParamField>
+
+<ParamField body="requirements" type="string[]" required>
+  Array of candidate requirement strings.
+</ParamField>
+
+<ParamField body="benefits" type="string[]" required>
+  Array of benefit strings offered to the intern.
+</ParamField>
+
+<ParamField body="skills" type="string[]" required>
+  Array of required or desired skills.
+</ParamField>
+
+### Response
+
+Returns `201 Created` with the newly created job object, including the server-generated `id`.
+
+### Example request
+
+```bash
+curl -X POST http://localhost:3001/api/jobs \
+  -H "Content-Type: application/json" \
+  -H "x-role: empresa" \
+  -d '{
+    "title": "Practicante Frontend",
+    "company": "TechCorp SAC",
+    "location": "Lima, Remoto",
+    "type": "externa",
+    "modality": "Remoto",
+    "area": "Tecnología",
+    "salary": "S/ 1,500 / mes",
+    "salaryNum": 1500,
+    "posted": "Hace 0 días",
+    "daysAgo": 0,
+    "deadline": "2025-08-31",
+    "duration": "3 meses",
+    "hoursPerWeek": 20,
+    "status": "abierto",
+    "initials": "TC",
+    "color": "#4f46e5",
+    "description": "Desarrollo de interfaces React.",
+    "requirements": ["React básico"],
+    "benefits": ["Laptop corporativa"],
+    "skills": ["React", "CSS"],
+    "applicants": 0,
+    "postedBy": "maria.fernandez@talenthub.pe"
+  }'
+```
+
+### Example response (201 Created)
+
+```json
+{
+  "id": 15,
+  "title": "Practicante Frontend",
+  "company": "TechCorp SAC",
+  "location": "Lima, Remoto",
+  "type": "externa",
+  "modality": "Remoto",
+  "area": "Tecnología",
+  "salary": "S/ 1,500 / mes",
+  "salaryNum": 1500,
+  "posted": "Hace 0 días",
+  "daysAgo": 0,
+  "deadline": "2025-08-31",
+  "duration": "3 meses",
+  "hoursPerWeek": 20,
+  "status": "abierto",
+  "initials": "TC",
+  "color": "#4f46e5",
+  "description": "Desarrollo de interfaces React.",
+  "requirements": ["React básico"],
+  "benefits": ["Laptop corporativa"],
+  "skills": ["React", "CSS"],
+  "applicants": 0,
+  "postedBy": "maria.fernandez@talenthub.pe"
+}
+```
+
+### Error response (403 Forbidden)
+
+```json
+{
+  "error": "Esta acción requiere una cuenta de empresa."
+}
+```

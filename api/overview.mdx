@@ -1,0 +1,95 @@
+---
+title: "UniLink REST API overview and conventions"
+sidebarTitle: "Overview"
+description: "The UniLink API is a local Express server on port 3001. All endpoints live under /api and communicate using JSON request and response bodies."
+---
+
+The UniLink REST API is a lightweight Express server that runs entirely on your local machine at `http://localhost:3001`. Every endpoint is mounted under the `/api` prefix, accepts JSON request bodies, and always responds with JSON — there is no HTML, XML, or form-encoded support. The server is intentionally minimal: it is a course prototype backed by a single SQLite file, designed to run alongside the React frontend with a single `npm run dev` command.
+
+## Base URL
+
+```
+http://localhost:3001/api
+```
+
+All paths in this documentation are relative to this base. For example, the login endpoint is reached at `http://localhost:3001/api/login`.
+
+## Content-Type
+
+Every request that includes a body **must** set the `Content-Type` header to `application/json`. Every response from the server is also `application/json`.
+
+```http
+Content-Type: application/json
+```
+
+## CORS
+
+The server is configured to accept requests only from the Vite development server origin. Any request from a different origin will be rejected by the browser's CORS policy.
+
+| Allowed origin |
+|----------------|
+| `http://localhost:5173` |
+
+## Authentication model
+
+<Note>
+  UniLink is a prototype — there are no JWT tokens, refresh tokens, or server-side sessions. Authentication works as follows:
+
+  1. `POST /api/login` validates the user's credentials and returns `{ email, role }`.
+  2. The React app stores this object in `localStorage` via `useLocalStorageState`.
+  3. For the one endpoint that requires authorization (`POST /api/jobs`), the client passes the role in the `x-role` request header. The server rejects the request with `403 Forbidden` if the header value is not `empresa`.
+
+  No bearer tokens are checked on any other endpoint.
+</Note>
+
+## All endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/login` | Authenticate and get role |
+| `GET` | `/api/jobs` | List all job listings |
+| `GET` | `/api/jobs/:id` | Get a single job listing |
+| `POST` | `/api/jobs` | Create a new job (empresa only) |
+| `GET` | `/api/profile/student` | Get the student profile |
+| `PUT` | `/api/profile/student` | Update the student profile |
+| `GET` | `/api/profile/company` | Get the company profile |
+| `PUT` | `/api/profile/company` | Update the company profile |
+| `GET` | `/api/applications` | List student applications |
+| `POST` | `/api/applications` | Submit a job application |
+
+## Error responses
+
+When a request fails, the API always returns a JSON object with a single `error` key containing a human-readable message.
+
+```json
+{ "error": "Descriptive error message here." }
+```
+
+Common HTTP status codes returned by the API:
+
+| Status | Meaning |
+|--------|---------|
+| `200 OK` | Request succeeded; response body contains the result |
+| `201 Created` | Resource was successfully created |
+| `401 Unauthorized` | Invalid credentials (login endpoint) |
+| `403 Forbidden` | Action not permitted for the caller's role |
+| `404 Not Found` | Requested resource does not exist |
+
+## JSON parsing for array and object fields
+
+SQLite stores every column as a flat value, so array and nested-object fields in jobs and profiles are persisted as JSON strings and parsed by the server before the response is sent. You will always receive proper JSON arrays and objects — never raw strings — for the following fields:
+
+| Resource | Parsed fields |
+|----------|---------------|
+| Job listing | `requirements`, `benefits`, `skills` |
+| Student profile | `skills`, `languages`, `certifications`, `experience`, `education`, `savedJobs` |
+| Company profile | `skills`, `languages`, `certifications`, `experience`, `education` |
+
+## Further reading
+
+Detailed documentation for each endpoint group:
+
+- [Authentication](/api/auth) — `POST /api/login`
+- [Jobs](/api/jobs) — listing, detail, and creation
+- [Profiles](/api/profiles) — student and company profiles
+- [Applications](/api/applications) — submitting and listing applications

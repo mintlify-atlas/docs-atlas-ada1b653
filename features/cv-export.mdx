@@ -1,0 +1,60 @@
+---
+title: "Export your UniLink student profile as a PDF CV"
+sidebarTitle: "CV Export"
+description: "UniLink generates a print-ready CV layout from the student profile data, letting you download it as a PDF using the browser's native print dialog."
+---
+
+The `/profile/cv` route renders a clean, print-optimised view of the student's profile data — no external tools or services required. The page is served by `CvPrintPage.jsx`, which reads the same profile data that powers the rest of the app and formats it into a structured, black-and-white CV layout designed to survive the browser's print pipeline intact. The print dialog opens automatically 300 milliseconds after the page loads, so you can move straight from clicking the button to saving the file.
+
+## How to export your CV
+
+<Steps>
+  <Step title="Navigate to your profile">
+    Log in as a student and go to `/profile` — or click **Mi Perfil** in the navigation bar.
+  </Step>
+  <Step title="Click Descargar CV">
+    Click the **Descargar CV** button in the top-right corner of your profile header. The app navigates to `/profile/cv`.
+  </Step>
+  <Step title="The CV page opens">
+    The browser renders the print-ready layout. The native print dialog opens automatically after a short delay. If it does not appear, click the **Imprimir / Guardar PDF** button at the top of the page.
+  </Step>
+  <Step title="Save as PDF">
+    In the print dialog, set the **Destination** to **Save as PDF** (Chrome / Edge) or **PDF** (Firefox / Safari), then click **Save**. Your CV is saved to your downloads folder.
+  </Step>
+</Steps>
+
+## CV sections
+
+The export page renders every section of the student profile in a single-column layout:
+
+| Section | Source fields |
+|---------|---------------|
+| Header | `name`, `career`, `email`, `phone`, `location` |
+| Sobre mí | `bio` |
+| Habilidades | `skills` (dot-separated list) |
+| Experiencia | `experience[]` — role, organisation, period, description |
+| Educación | `education.degree`, `education.university`, `education.years` |
+| Certificaciones | `certifications[]` — name, issuer, year (shown only when non-empty) |
+| Idiomas | `languages[]` — language and level pairs (shown only when non-empty) |
+
+Faculty and semester are displayed on the regular profile page but are omitted from the CV layout to keep it employer-facing rather than academic.
+
+<Note>
+  The CV page is a **live render** of your current profile data. If you have recently updated your name, skills, bio, or any other editable field, make sure to save those changes on `/profile/edit` before opening the CV page — the export will always reflect whatever is stored in the database at the moment the page loads.
+</Note>
+
+<Tip>
+  For the cleanest result in the print dialog, set the **Margins** option to **None** or **Minimum** and make sure **Headers and footers** is unchecked. This prevents the browser from adding the URL, date, and page-number footer that would otherwise appear on the printed page.
+</Tip>
+
+## Route and component
+
+The CV export is handled entirely client-side:
+
+```
+GET /profile/cv   →   CvPrintPage.jsx
+```
+
+The page is a React component that reads from `AppDataContext` — no additional API call is made when visiting `/profile/cv`. The `window.print()` call is fired inside a `useEffect` with a 300 ms delay to give the browser time to finish rendering the layout before the dialog appears.
+
+The `no-print` CSS class is applied to the back-navigation and manual print button at the top of the page, so those controls do not appear in the saved PDF.

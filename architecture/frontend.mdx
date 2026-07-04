@@ -1,0 +1,133 @@
+---
+title: "UniLink React frontend structure and state management"
+sidebarTitle: "Frontend"
+description: "The UniLink frontend is a React 18 single-page app using React Router, Context API for global state, and a thin fetch-based API client."
+---
+
+The `sanmarcos-jobs/` directory is a React 18 single-page application bundled by Vite 5. The entry point is `src/main.jsx`, which mounts the root `<App />` component inside `<AppDataProvider>`. All client-side routing is handled by React Router 6's `<BrowserRouter>`, with route definitions centralised in `App.jsx`. There is no server-side rendering — the Vite dev server serves the static SPA and the browser handles every navigation client-side.
+
+## Routes
+
+All routes are defined in `src/App.jsx`. Unknown paths redirect to `/` via a catch-all `<Navigate>` element.
+
+| Path | Component | Description |
+|------|-----------|-------------|
+| `/` | `LoginPage` | Login screen with demo credential shortcuts |
+| `/feed` | `FeedPage` | Job listings with type, modality, salary, and recency filters |
+| `/jobs/new` | `NewJobPage` | Post a new job listing (empresa accounts only) |
+| `/jobs/:id` | `JobDetailPage` | Full job detail view with apply button |
+| `/profile` | `ProfilePage` | View student or company profile |
+| `/profile/edit` | `EditProfilePage` | Edit profile fields and skills |
+| `/profile/cv` | `CvPrintPage` | Printable CV layout for browser PDF export |
+| `*` | Redirect `/` | Catch-all — redirects any unmatched path to login |
+
+## Global state (`AppDataContext`)
+
+`AppDataProvider` wraps the entire application in `src/main.jsx` and makes shared state and actions available to any component via the `useAppData()` hook. Internally it composes `useState` for server-fetched data, `useLocalStorageState` for session persistence, and a `useMemo`-wrapped context value to avoid unnecessary re-renders.
+
+On mount, `AppDataProvider` fetches all four data sources in parallel:
+
+```js src/context/AppDataContext.jsx
+useEffect(() => {
+  api.getJobs().then(setJobs)
+  api.getStudentProfile().then(setStudent)
+  api.getCompanyProfile().then(setCompany)
+  api.getApplications().then(setApplications)
+}, [])
+```
+
+### State values
+
+| Value | Type | Description |
+|-------|------|-------------|
+| `user` | `object \| null` | Logged-in user object `{ email, role }` |
+| `role` | `string \| null` | Derived from `user.role` — `estudiante` or `empresa` |
+| `jobs` | `Job[]` | All job listings fetched from the API |
+| `student` | `Student \| null` | Student profile object |
+| `company` | `Company \| null` | Company/recruiter profile object |
+| `applications` | `Application[]` | The student's submitted applications |
+
+### Action functions
+
+| Function | Description |
+|----------|-------------|
+| `login(email, password)` | Calls the API, stores the returned user in state and localStorage |
+| `logout()` | Clears `user` from state (and therefore localStorage) |
+| `addJob(job)` | Posts a new job via the API and appends it to the local `jobs` array |
+| `updateStudent(patch)` | Sends a `PUT` to the API and refreshes the local `student` state |
+| `updateCompany(patch)` | Sends a `PUT` to the API and refreshes the local `company` state |
+| `applyToJob(jobId)` | Posts an application and appends it to `applications` if not already present |
+
+### Session persistence
+
+The `user` value is persisted to `localStorage` under the key `sanmarcos:user` via `useLocalStorageState`. Refreshing the page restores the session without a round-trip to the backend. Calling `logout()` sets `user` to `null`, which clears the stored value.
+
+## API client (`src/lib/api.js`)
+
+All backend communication is handled by a thin module that wraps `fetch`. The base URL is hardcoded to `http://localhost:3001/api`.
+
+### Request helper
+
+```js src/lib/api.js
+const API_BASE = 'http://localhost:3001/api'
+
+async function request(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+  })
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.error || 'Error de red')
+  return data
+}
+```
+
+Every exported function delegates to `request`. On a non-2xx response, the helper throws an `Error` with the server's `error` message (or the fallback string `'Error de red'`), which callers can catch and display in the UI.
+
+### Exported functions
+
+| Function | Method | Path |
+|----------|--------|------|
+| `login(email, password)` | POST | `/api/login` |
+| `getJobs()` | GET | `/api/jobs` |
+| `getJob(id)` | GET | `/api/jobs/:id` |
+| `createJob(job, role)` | POST | `/api/jobs` |
+| `getStudentProfile()` | GET | `/api/profile/student` |
+| `updateStudentProfile(patch)` | PUT | `/api/profile/student` |
+| `getCompanyProfile()` | GET | `/api/profile/company` |
+| `updateCompanyProfile(patch)` | PUT | `/api/profile/company` |
+| `getApplications()` | GET | `/api/applications` |
+| `applyToJob(jobId)` | POST | `/api/applications` |
+
+`createJob` passes the caller's `role` value as the `x-role` request header, which the Express route uses to gate access to empresa accounts only.
+
+## Reusable components
+
+### `<Navbar />`
+
+A sticky header (`position: sticky; top: 0; z-index: 50`) rendered on every page except the login screen. It reads `role` and `logout` from `useAppData()` and uses `useLocation()` to detect the active route and apply the gold accent colour to the matching link.
+
+Navigation links rendered: **Ofertas** (`/feed`), **Publicar oferta** (`/jobs/new`, empresa only), **Mi Perfil** (`/profile`), and a **Salir** button that calls `logout()` then redirects to `/`. Icons come from `lucide-react` (`Briefcase`, `PlusCircle`, `UserCircle`, `LogOut`).
+
+### `<GlowInput variant="line" | "box" />`
+
+A custom `<input>` wrapper that responds to cursor proximity via a `mousemove` listener attached to `window`. The glow activates within 55px of the element and fades proportionally with distance.
+
+- **`variant="line"`** — renders a bare `<input>` with only a bottom border. As the cursor approaches, the border transitions from `rgba(196, 152, 58, 0.18)` to full gold (`#c4983a`). Used in the login form.
+- **`variant="box"`** — wraps the `<input>` in a 1.5px border container. The border facing the cursor lights up via a `radial-gradient` at the cursor's relative position. Used for the feed search bar.
+
+All standard `<input>` props (`type`, `placeholder`, `value`, `onChange`, etc.) are forwarded via rest props. Use `inputClassName` to style the inner `<input>` in `variant="box"` mode, and `className` for the wrapper.
+
+### `<Select />`
+
+A custom select dropdown used for the feed filter controls (modality, salary range, recency). Styled to match the dark editorial theme — no browser-default appearance, gold focus ring on interaction.
+
+## Design system
+
+<Note>
+  The UI uses a dark editorial theme throughout. Key design tokens: near-black
+  background `#141412`, warm surface `#1c1c19`, gold accent `#c4983a`, IBM Plex
+  Sans for body text, and Cormorant Garamond for headings. All elements are
+  angular — no `rounded-xl` or similar large radius classes are used anywhere in
+  the codebase.
+</Note>

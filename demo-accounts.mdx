@@ -1,0 +1,45 @@
+---
+title: "Demo accounts and roles in UniLink"
+sidebarTitle: "Demo Accounts"
+description: "UniLink ships with two pre-seeded demo accounts — a student and a company recruiter — so you can explore every feature without manual setup."
+---
+
+UniLink is built around two distinct roles — student and company — each unlocking a different set of features in the app. To make local exploration effortless, the database is seeded with one pre-built account per role. You can switch between them at any time from the login screen without creating anything manually.
+
+## Credentials
+
+| Role | Email | Password |
+|---|---|---|
+| Estudiante (Student) | `admin@unmsm.edu.pe` | `unmsm2025` |
+| Empresa (Company) | `maria.fernandez@talenthub.pe` | `talenthub2025` |
+
+The login page includes **"Ver como estudiante"** and **"Ver como empresa"** quick-fill buttons that populate both fields automatically — just click and then press **Iniciar sesión**.
+
+## Student role capabilities
+
+When signed in as the student account, you can:
+
+- Browse the full job feed and scroll through all 14 seeded listings
+- Filter listings by job type, modality (remote / on-site / hybrid), salary range, and days since posting
+- Open any job-detail page to see the full description, requirements, benefits, and required skills
+- Apply to a listing with a single click — the application is persisted to the database immediately
+- Track the status of all submitted applications from the **Mis postulaciones** card on the profile page
+- Edit your profile (name, career, faculty, semester, GPA, contact details, bio, and skills)
+- Export a print-ready CV to PDF using the browser's native print dialog
+
+## Company role capabilities
+
+When signed in as the company account, you can:
+
+- Browse the full job feed just like a student
+- Post new job listings — the create-listing form sends a `POST /api/jobs` request with the `x-role: empresa` header, which the backend requires for authorisation
+- View all listings your account has published from the **Ofertas publicadas** card on the profile page
+- Edit the company profile (contact name, recruiter role, company name, industry, website, description, and skills)
+
+<Warning>
+  Authentication in UniLink is for **demo purposes only**. Passwords are stored as plain text in the SQLite database — there is no hashing, no JWT, and no server-side session. Routes are not protected on the frontend, meaning any page can be accessed directly via its URL regardless of login state. Do not use real credentials or deploy this application to a public server.
+</Warning>
+
+<Note>
+  The database contains exactly **one student account** (internal `id = 1`) and **one company account** (internal `id = 1`). All application and profile endpoints are hard-coded to these IDs. Multi-user and multi-company support is a known limitation of this prototype — see the [Introduction](/introduction#known-limitations) for the full list.
+</Note>

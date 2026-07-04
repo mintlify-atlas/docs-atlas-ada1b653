@@ -1,0 +1,80 @@
+---
+title: "Browse and filter internship listings in UniLink"
+sidebarTitle: "Job Feed"
+description: "The job feed displays all available internship listings with real-time filters for type, modality, salary range, and posting recency."
+---
+
+The job feed is the heart of UniLink. Accessible at the `/feed` route, it presents every internship listing currently seeded into the database and lets students narrow results instantly with five independent filters. Internal (UNMSM) and external (company) offers are mixed together by default; each card carries enough information to evaluate a role at a glance without opening the full detail view.
+
+## Accessing the feed
+
+After logging in, navigate to:
+
+```
+http://localhost:5173/feed
+```
+
+The page fetches all listings from `GET /api/jobs` on mount via the `AppDataContext`. No manual refresh is required — filter changes apply immediately to the already-loaded data.
+
+## Filter system
+
+The feed offers five filters that combine with logical AND. The type tabs and search box occupy the top row; the three dropdown filters sit in the second row.
+
+| Filter | State key | Options |
+|--------|-----------|---------|
+| Type | `activeType` | Todas / Internas / Externas |
+| Search | `query` | Free text matched against `title` and `company` |
+| Modality | `modality` | (all) / Presencial / Híbrido / Remoto |
+| Salary | `salary` | (all) / Under S/1,000 / S/1,000–2,000 / Over S/2,000 |
+| Recency | `days` | (all) / Last 1 day / Last 3 days / Last 7 days |
+
+Salary filtering uses the numeric `salaryNum` field on each job record — not the display string — so the ranges are precise. Recency filtering compares each job's `daysAgo` value against the chosen threshold.
+
+### Clearing dropdown filters
+
+A **Limpiar** button appears automatically in the filter row whenever at least one of `modality`, `salary`, or `days` is non-empty. Clicking it resets all three to their empty (show-all) state in a single action. The type tab and search query are unaffected.
+
+<Tip>
+  Internal offers (`type: interna`) come from UNMSM faculties — departments such as Ingeniería de Sistemas, Ciencias Matemáticas, or Química post assistant and monitor roles exclusively for enrolled San Marcos students. External offers come from partner companies operating in Lima and beyond.
+</Tip>
+
+## Job card fields
+
+Each card in the two-column grid displays:
+
+| Field | Description |
+|-------|-------------|
+| `title` | Role title — rendered as the card heading |
+| `company` | Hiring organisation |
+| `location` | City and workplace mode string, e.g. `"Lima, Híbrido"` |
+| `modality` | Presencial / Híbrido / Remoto |
+| `salary` | Formatted salary string, e.g. `"S/ 1,800 / mes"` |
+| `type` | Badge: **Interna** (gold) or **Externa** (muted) |
+| `posted` | Human-readable posting age, e.g. `"Hace 2 días"` |
+| `deadline` | Application deadline in ISO format |
+| `duration` | Contract length, e.g. `"3 meses"` |
+| `hoursPerWeek` | Weekly commitment in hours |
+| `applicants` | Number of students who have already applied |
+| `skills` | Up to three skill tags shown as inline badges |
+
+Clicking any card navigates to `/jobs/:id` for the full detail view.
+
+## Job status badges
+
+Every listing carries a `status` field that reflects its current availability:
+
+| Value | Label | Meaning |
+|-------|-------|---------|
+| `abierto` | Abierto | Accepting applications |
+| `por_cerrar` | Por cerrar | Deadline approaching — apply soon |
+| `cerrado` | Cerrado | No longer accepting applications |
+
+## API reference
+
+The feed data is sourced from a single endpoint:
+
+```
+GET /api/jobs
+```
+
+See the [API — Jobs](/api/jobs) reference for the full response schema, query parameters, and error codes.

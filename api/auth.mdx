@@ -1,0 +1,98 @@
+---
+title: "POST /api/login — authenticate a UniLink user"
+sidebarTitle: "Authentication"
+description: "POST /api/login validates email and password against the users table and returns the user's email and role. Returns 401 if credentials are invalid."
+---
+
+`POST /api/login` is the only authentication endpoint in the UniLink API. It looks up the submitted credentials in the `users` table and, on success, returns the account's email and role. The client uses the role value to decide which interface to render — the student dashboard or the company portal — so it is important that the correct account is used for each workflow.
+
+## Endpoint
+
+```
+POST /api/login
+```
+
+## Request body
+
+<ParamField body="email" type="string" required>
+  The user's registered email address.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The user's password. Passwords are stored and compared as plain text in this prototype.
+</ParamField>
+
+## Response fields
+
+<ResponseField name="email" type="string">
+  The authenticated user's email address, echoed back from the database row.
+</ResponseField>
+
+<ResponseField name="role" type="string">
+  The user's role. Either `estudiante` (student) or `empresa` (company).
+</ResponseField>
+
+## Examples
+
+### Student login
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST http://localhost:3001/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@unmsm.edu.pe", "password": "unmsm2025"}'
+```
+
+```json Response
+{ "email": "admin@unmsm.edu.pe", "role": "estudiante" }
+```
+
+</CodeGroup>
+
+### Company login
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST http://localhost:3001/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "maria.fernandez@talenthub.pe", "password": "talenthub2025"}'
+```
+
+```json Response
+{ "email": "maria.fernandez@talenthub.pe", "role": "empresa" }
+```
+
+</CodeGroup>
+
+## Error response — 401 Unauthorized
+
+When the email does not exist in the database or the password does not match, the server returns HTTP `401` with a Spanish-language error message:
+
+```json
+{ "error": "Correo o contraseña incorrectos." }
+```
+
+## Role-based access
+
+<Note>
+  After a successful login, the `role` value drives the entire React application:
+
+  - `estudiante` — shows the student feed, application tracker, and student profile editor.
+  - `empresa` — shows the company portal, posted-jobs card, and company profile editor, and also enables `POST /api/jobs`.
+
+  When calling `POST /api/jobs` as a company user, the frontend sends the stored role as the `x-role: empresa` request header. Requests to that endpoint without the correct header value receive a `403 Forbidden` response.
+</Note>
+
+## Security warning
+
+<Warning>
+  Passwords are stored as plain text in the SQLite database — no hashing, salting, or encryption is applied. This is intentional for a demo prototype to keep the setup dependency-free and easy to inspect. **Never use this approach in a production system.** A real application must hash passwords with a library such as `bcrypt` before storing them.
+</Warning>
+
+## How the frontend uses this endpoint
+
+The React app calls this endpoint through the `login(email, password)` function defined in `src/lib/api.js`. On a successful response, the returned object is persisted to `localStorage` via the `useLocalStorageState` hook and placed into the global `AppDataContext`, making the `email` and `role` values available to every component without additional network requests.
+
+The login page also ships two quick-fill buttons — **"Ver como estudiante"** and **"Ver como empresa"** — that pre-populate the form with the two demo accounts seeded into the database on first run.

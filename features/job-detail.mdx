@@ -1,0 +1,90 @@
+---
+title: "View job details and apply for internships"
+sidebarTitle: "Job Detail"
+description: "The job detail page shows the full internship description, requirements, benefits, and skills, and lets students apply with a single click."
+---
+
+The `/jobs/:id` route renders the complete profile of a single internship listing. Where the feed card shows a summary, the detail page exposes the full description, a numbered requirements list, benefits, and all required skills — plus the primary action for students: applying with a single button click. Company-role accounts see this same page for any listing they have published, and they gain access to the "Nueva oferta" flow to create new listings.
+
+## Fields displayed
+
+The page assembles its content from a single job record. All fields below are rendered on the detail page:
+
+| Field | Description |
+|-------|-------------|
+| `title` | Role title shown as the page heading |
+| `company` | Hiring organisation |
+| `location` | City and workplace string, e.g. `"Lima, Híbrido"` |
+| `type` | `interna` (gold badge) or `externa` (muted badge) |
+| `modality` | Presencial / Híbrido / Remoto |
+| `area` | Functional area, e.g. `"Tecnología"` |
+| `salary` | Formatted salary string, e.g. `"S/ 1,800 / mes"` |
+| `posted` | Human-readable posting age |
+| `deadline` | Application deadline (ISO date) |
+| `duration` | Contract length, e.g. `"3 meses"` |
+| `hoursPerWeek` | Weekly commitment in hours |
+| `description` | Full role description (prose) |
+| `requirements` | Ordered list of requirements |
+| `benefits` | List of offered benefits |
+| `skills` | Required skill tags |
+| `applicants` | Current applicant count |
+
+## Applying to a listing
+
+Students click the **Postular** button in the top-right corner of the header block. The app calls:
+
+```http
+POST /api/applications
+Content-Type: application/json
+
+{ "jobId": 4 }
+```
+
+The backend creates an application record and returns it with an initial `status` of `en_revision`. The button state updates immediately in the UI to show a **Postulación enviada** confirmation — no page reload is required.
+
+### Duplicate protection
+
+If the same student submits a second request for a job they have already applied to, the API returns the existing application record with **HTTP 200** rather than creating a duplicate entry. The frontend's `applyToJob` function in `AppDataContext` also guards the local state: it only appends the new record if no matching `jobId` already exists in the applications array.
+
+See the [API — Applications](/api/applications) reference for the full request and response schema.
+
+## Posting a new listing (empresa role)
+
+Accounts with the `empresa` role see a **Nueva oferta** link in the navigation bar. Clicking it opens the form at `/jobs/new`, which submits to:
+
+```http
+POST /api/jobs
+x-role: empresa
+Content-Type: application/json
+```
+
+<Note>
+  The `x-role: empresa` header is required. Requests without it, or with `x-role: estudiante`, are rejected by the backend with **HTTP 403**.
+</Note>
+
+### New job form fields
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `title` | string | Job title |
+| `company` | string | Auto-populated from the company profile (`companyName`) |
+| `location` | string | e.g. `"Lima, Híbrido"` |
+| `type` | `interna` / `externa` | Listing type |
+| `modality` | `Presencial` / `Híbrido` / `Remoto` | Work mode |
+| `area` | string | e.g. `"Tecnología"` |
+| `salary` | string | Formatted automatically — e.g. `"S/ 1,800 / mes"` |
+| `salaryNum` | number | Numeric salary entered in the form; used for feed filtering |
+| `deadline` | date | YYYY-MM-DD |
+| `duration` | string | e.g. `"3 meses"` |
+| `hoursPerWeek` | number | Weekly hours |
+| `description` | string | Full role description |
+| `requirements` | string[] | One requirement per line in the form; stored as a JSON array |
+| `benefits` | string[] | One benefit per line; stored as a JSON array |
+| `skills` | string[] | One skill per line; stored as a JSON array |
+
+After a successful `POST`, the user is redirected to the new listing's detail page at `/jobs/:id`.
+
+## API references
+
+- [API — Jobs](/api/jobs) — `GET /api/jobs`, `GET /api/jobs/:id`, `POST /api/jobs`
+- [API — Applications](/api/applications) — `POST /api/applications`, `GET /api/applications`

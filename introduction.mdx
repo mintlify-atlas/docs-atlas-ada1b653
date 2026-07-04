@@ -1,0 +1,68 @@
+---
+title: "UniLink: LinkedIn-style Internship Portal for UNMSM"
+sidebarTitle: "Introduction"
+description: "UniLink is a full-stack university job board connecting UNMSM students with internal university postings and external company internship opportunities."
+---
+
+UniLink is a LinkedIn-inspired internship portal built exclusively for students at Universidad Nacional Mayor de San Marcos (UNMSM). It centralises both internal university postings and external company opportunities in one place, giving students a professional profile inside the university ecosystem and giving recruiters a direct channel to reach UNMSM talent — no generic job boards, no noise from unrelated institutions.
+
+## Dual-role system
+
+UniLink is built around two distinct roles that reflect how an internship marketplace actually works:
+
+- **Estudiante (Student)** — creates and maintains a professional profile, browses the job feed, applies to internships, tracks application status, and exports a print-ready CV as a PDF.
+- **Empresa (Company)** — manages a company profile (including a recruiter card), publishes new job listings, and reviews the postings the account has created.
+
+Both roles share the same login screen and the same feed, keeping the experience simple and consistent regardless of who is signed in.
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Job Feed" icon="briefcase" href="/features/job-feed">
+    Browse and filter internship listings by type, modality, salary range, and recency. Every card links to a full job-detail view.
+  </Card>
+  <Card title="Profiles" icon="user" href="/features/profiles">
+    Students and companies each have an editable profile page with skills, bio, contact details, and more.
+  </Card>
+  <Card title="Applications" icon="file-check" href="/features/applications">
+    Students can apply to any listing in one click. Application status is persisted in the database and visible from the profile page.
+  </Card>
+  <Card title="CV Export" icon="file-pdf" href="/features/cv-export">
+    Generate a print-ready CV from the student profile data and download it as a PDF directly from the browser print dialog.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Explore the Express REST API that powers the app — authentication, jobs, profiles, and applications.
+  </Card>
+  <Card title="Architecture" icon="layer-group" href="/architecture/overview">
+    Understand the repo structure, SQLite schema, and how the frontend and backend communicate.
+  </Card>
+</CardGroup>
+
+## Tech stack
+
+| Layer | Technology | Version |
+|---|---|---|
+| Frontend framework | React | 18.3 |
+| Build tool | Vite | 5.4 |
+| Styling | Tailwind CSS | 3.4 |
+| Client-side routing | React Router | 6.28 |
+| Backend runtime | Node.js + Express | 20+ / 4.21 |
+| Database | SQLite via better-sqlite3 | 11.8 |
+| Dev orchestration | concurrently | 9.1 |
+
+The entire project runs 100% locally — no Docker, no cloud services, no environment variables required.
+
+<Note>
+  UniLink is a prototype built for the **Prácticas Preprofesionales** university course. It is intentionally simple: there is a single student account and a single company account, no JWT-based sessions, and no automated test suite. It is designed to be a learning vehicle, not a production system.
+</Note>
+
+## Known limitations
+
+<Accordion title="Known limitations of this prototype">
+  - **No password hashing** — credentials are stored as plain text in the SQLite database. Never reuse real passwords with this app.
+  - **No protected routes** — the frontend does not guard pages behind an auth check; any URL can be accessed directly in the browser.
+  - **Single-account model** — there is exactly one student profile (`id = 1`) and one company profile (`id = 1`). Multi-user or multi-company support does not exist yet.
+  - **No automated tests** — there are no unit, integration, or end-to-end tests in the repository.
+  - **No university-admin role** — a moderator role that can approve internal postings was planned but has not been implemented.
+  - **Partial profile editing** — experience, education, certifications, and languages are read-only in the UI; only basic fields and skills can be updated through the edit form.
+</Accordion>

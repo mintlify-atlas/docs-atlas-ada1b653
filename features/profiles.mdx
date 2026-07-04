@@ -1,0 +1,107 @@
+---
+title: "Student and company profile management in UniLink"
+sidebarTitle: "Profiles"
+description: "UniLink maintains separate profile types for students and companies. Students can update personal info and skills; companies manage their recruiter profile."
+---
+
+UniLink maintains two distinct profile types — student and company — each served by its own API endpoint and rendered by a shared `ProfilePage` component that adapts its layout based on the active role. Students access a professional profile that feeds directly into the CV export feature; companies display a recruiter card and a list of the offers they have published. Both types share the same `/profile` route and `/profile/edit` edit form, which branches its fields depending on the logged-in role.
+
+## Student profile
+
+The student profile is loaded from `GET /api/profile/student` on application mount and held in the global `AppDataContext`.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Full name |
+| `career` | string | Degree programme, e.g. `"Ingeniería de Sistemas"` |
+| `faculty` | string | Faculty name, e.g. `"Ingeniería de Sistemas e Informática"` |
+| `semester` | string | Current semester, e.g. `"VIII ciclo"` |
+| `gpa` | string | Grade point average, e.g. `"16.8"` |
+| `email` | string | Institutional email |
+| `phone` | string | Contact number |
+| `location` | string | City, e.g. `"Lima, Perú"` |
+| `bio` | string | Short professional bio |
+| `skills` | string[] | Technical and soft skills |
+| `languages` | object[] | `{ lang, level }` pairs, e.g. `{ lang: "Inglés", level: "B2" }` |
+| `certifications` | object[] | `{ name, issuer, year }` |
+| `experience` | object[] | `{ id, role, org, period, desc }` |
+| `education` | object | `{ degree, university, years }` |
+| `savedJobs` | number[] | IDs of saved job listings |
+
+### Editing the student profile
+
+Navigate to `/profile/edit` to open the edit form. The following fields are writable in the current prototype:
+
+- Name, career, faculty, semester, GPA
+- Email, phone, location
+- Bio (short professional summary)
+- Skills (entered as a comma-separated list; split and stored as a JSON array)
+
+<Warning>
+  Experience, education, certifications, and languages are **read-only in the current prototype**. They are seeded once by the backend and displayed on the profile and CV pages, but the edit form does not expose inputs for them yet.
+</Warning>
+
+Saving the form calls `PUT /api/profile/student` and updates the global state immediately — no page reload is needed.
+
+## Company profile
+
+The company profile is loaded from `GET /api/profile/company`. It represents the recruiter account rather than a full company entity.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `contactName` | string | Recruiter's full name |
+| `role` | string | Recruiter's job title, e.g. `"Talent Acquisition Lead"` |
+| `companyName` | string | Company name |
+| `industry` | string | Industry sector, e.g. `"Tecnología"` |
+| `companyDescription` | string | Short company overview |
+| `website` | string | Company website URL |
+| `email` | string | Contact email |
+| `phone` | string | Contact phone |
+| `location` | string | City |
+| `bio` | string | Short recruiter bio |
+| `skills` | string[] | Recruiter skills |
+
+### Editing the company profile
+
+Company accounts access the same `/profile/edit` route. The form branches to display company-specific fields: contact name, role, company name, industry, company description, website, email, phone, location, recruiter bio, and skills.
+
+Saving calls `PUT /api/profile/company` and immediately reflects the updated data on the profile page.
+
+## Profile page sections
+
+The profile page (`/profile`) renders the following cards depending on role:
+
+<CardGroup cols={2}>
+  <Card title="Student view" icon="user">
+    - **Sobre mí** — bio text
+    - **Habilidades** — skill tags
+    - **Mis postulaciones** — list of submitted applications with current status
+    - **Experiencia** — work experience entries
+    - **Educación** — degree and university
+  </Card>
+  <Card title="Company view" icon="building">
+    - **Sobre la empresa** — company description
+    - **Sobre mí** — recruiter bio
+    - **Habilidades** — recruiter skills
+    - **Ofertas publicadas** — job listings created by this account
+    - **Experiencia** — recruiter experience entries
+    - **Educación** — recruiter education
+  </Card>
+</CardGroup>
+
+<Note>
+  Only one student profile (id = 1) and one company profile (id = 1) exist in the database. Multi-user support — where multiple students or multiple company accounts each have their own profile row — is not implemented in this prototype. All student operations operate on the single seeded student record, and all company operations operate on the single seeded company record.
+</Note>
+
+## API reference
+
+See the [API — Profiles](/api/profiles) reference for endpoint details, request bodies, and response schemas for:
+
+- `GET /api/profile/student`
+- `PUT /api/profile/student`
+- `GET /api/profile/company`
+- `PUT /api/profile/company`

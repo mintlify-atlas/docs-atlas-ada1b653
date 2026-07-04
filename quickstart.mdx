@@ -1,47 +1,104 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get started with UniLink in minutes"
+sidebarTitle: "Quickstart"
+description: "Install UniLink's dependencies, seed the database, and run the full-stack dev environment locally with a single command."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
+This guide walks you through cloning the repository, installing dependencies across all three package manifests, and booting the full-stack development environment. By the end you will have the Express API running on port 3001, the Vite dev server on port 5173, and a pre-seeded SQLite database ready to explore with the demo accounts.
 
 ## Prerequisites
 
-Before you begin, you must have:
+- **Node.js 20 or later** — the backend uses `node --watch`, a built-in file-watcher introduced in Node 18 and stabilised in Node 20. Check your version with `node -v`.
 
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+## Steps
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Clone the repository">
+    Download the project source to your local machine:
 
     ```bash
-    npm install your-package
+    git clone https://github.com/DincaAlex/unilink.git
+    cd unilink
     ```
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+
+  <Step title="Install dependencies">
+    The project has three independent `package.json` files — one at the repo root (which provides `concurrently`), one for the backend, and one for the frontend. Install all three:
 
     ```bash
-    your-cli init
+    npm install
+    npm install --prefix server
+    npm install --prefix sanmarcos-jobs
     ```
+
+    Each command is isolated to its own directory and will not interfere with the others.
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+
+  <Step title="Start the dev server">
+    From the repo root, run the single dev script:
 
     ```bash
-    your-cli start
+    npm run dev
     ```
+
+    Under the hood this uses `concurrently` to launch both processes at once:
+
+    | Process | Command | URL |
+    |---|---|---|
+    | Backend (Express) | `node --watch index.js` | http://localhost:3001 |
+    | Frontend (Vite) | `vite` | http://localhost:5173 |
+
+    Both processes stream their logs to the same terminal, colour-coded blue for the backend and green for the frontend. The backend hot-reloads automatically whenever you save a file inside `server/`.
+  </Step>
+
+  <Step title="Open the app">
+    Once both processes report that they are ready, open your browser to:
+
+    ```
+    http://localhost:5173
+    ```
+
+    You should see the UniLink login screen.
+  </Step>
+
+  <Step title="Log in with a demo account">
+    UniLink ships with two pre-seeded accounts. Head to [Demo Accounts](/demo-accounts) for credentials, or use the **"Ver como estudiante"** / **"Ver como empresa"** auto-fill buttons on the login screen.
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+## Database seeding
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+<Note>
+  On the very first run, the backend creates `server/data.sqlite` (in WAL mode) and seeds it automatically. The initial dataset includes **14 job listings**, **one student profile**, and **one company profile**, along with both demo user accounts. You do not need to run any migration or seed script manually.
+</Note>
+
+## Resetting the database
+
+<Tip>
+  To wipe the database and start fresh, stop the backend process, then delete `server/data.sqlite` — and `server/data.sqlite-wal` and `server/data.sqlite-shm` if they exist. The next time you run `npm run dev`, the backend will recreate and re-seed the database from scratch.
 </Tip>
+
+## Port conflict troubleshooting
+
+<Warning>
+  If `npm run dev` fails to bind to port 3001 or 5173, a previous process is likely still holding the port. Identify and terminate it before retrying.
+
+  **On Windows:**
+
+  ```cmd
+  netstat -ano | findstr "3001 5173"
+  ```
+
+  Note the PID in the last column, then:
+
+  ```cmd
+  taskkill /PID <pid> /F
+  ```
+
+  **On macOS / Linux:**
+
+  ```bash
+  lsof -ti :3001 | xargs kill -9
+  lsof -ti :5173 | xargs kill -9
+  ```
+</Warning>

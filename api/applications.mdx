@@ -1,0 +1,115 @@
+---
+title: "Applications API — submit and list internship applications"
+sidebarTitle: "Applications"
+description: "GET /api/applications returns all applications for the student, and POST /api/applications submits a new application. Duplicate submissions return the existing record."
+---
+
+Two endpoints manage internship applications for the single registered student (`studentId = 1`). You can retrieve the full list of the student's applications, or submit a new one by providing a `jobId`. The server handles duplicate submissions gracefully — applying to the same job a second time returns the already-existing record rather than creating a duplicate entry.
+
+---
+
+## GET /api/applications
+
+Returns all application records where `studentId = 1`.
+
+<ParamField query="(none)" type="">
+  This endpoint accepts no query parameters or request body.
+</ParamField>
+
+### Response
+
+A JSON array of application objects.
+
+<ResponseField name="id" type="number">
+  Auto-incremented primary key for the application record.
+</ResponseField>
+
+<ResponseField name="studentId" type="number">
+  Always `1` in this prototype — the single registered student.
+</ResponseField>
+
+<ResponseField name="jobId" type="number">
+  The ID of the job listing the student applied to.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current application status. Possible values: `en_revision`, `entrevista`, `rechazado`, `aceptado`.
+</ResponseField>
+
+<ResponseField name="appliedDate" type="string">
+  The date the application was submitted, in `YYYY-MM-DD` format.
+</ResponseField>
+
+### Example request
+
+```bash
+curl http://localhost:3001/api/applications
+```
+
+### Example response
+
+```json
+[
+  {
+    "id": 1,
+    "studentId": 1,
+    "jobId": 2,
+    "status": "en_revision",
+    "appliedDate": "2025-06-01"
+  }
+]
+```
+
+---
+
+## POST /api/applications
+
+Submits a new internship application for the student. If the student has already applied to the specified job, the server returns the **existing** application record with HTTP `200` instead of creating a duplicate.
+
+### Request body
+
+<ParamField body="jobId" type="number" required>
+  The ID of the job listing to apply to. Must correspond to an existing job in the database.
+</ParamField>
+
+### Response
+
+<Expandable title="201 Created — new application">
+  Returned when this is the first application to the given job. The `status` is set to `en_revision` and `appliedDate` is today's date in `YYYY-MM-DD` format.
+
+  ```json
+  {
+    "id": 5,
+    "studentId": 1,
+    "jobId": 4,
+    "status": "en_revision",
+    "appliedDate": "2025-06-15"
+  }
+  ```
+</Expandable>
+
+<Expandable title="200 OK — duplicate application">
+  Returned when the student has already applied to this job. The existing application record is returned unchanged — no new row is inserted.
+
+  ```json
+  {
+    "id": 1,
+    "studentId": 1,
+    "jobId": 4,
+    "status": "en_revision",
+    "appliedDate": "2025-06-01"
+  }
+  ```
+</Expandable>
+
+### Example request
+
+```bash
+curl -X POST http://localhost:3001/api/applications \
+  -H "Content-Type: application/json" \
+  -d '{"jobId": 4}'
+```
+
+<Note>
+  The initial status of every new application is always `en_revision`. Transitioning to `entrevista`, `rechazado`, or `aceptado` would require a `PUT /api/applications/:id` endpoint — this is not yet implemented in the current prototype. Status changes must be made directly in the SQLite database for now.
+</Note>

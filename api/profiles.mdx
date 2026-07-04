@@ -1,0 +1,382 @@
+---
+title: "Profiles API — read and update student and company profiles"
+sidebarTitle: "Profiles"
+description: "Four endpoints serve profile data: GET and PUT for the student profile, GET and PUT for the company profile. All operate on single-record tables (id = 1)."
+---
+
+UniLink maintains exactly one student profile and one company profile. Rather than requiring user IDs in the URL, all four endpoints implicitly operate on the fixed record with `id = 1` in their respective database tables. This keeps client code simple for the current single-user prototype. Fields that hold structured data (skills, languages, certifications, experience, education) are stored as JSON in SQLite and returned as parsed arrays and objects.
+
+---
+
+## GET /api/profile/student
+
+Returns the full student profile object for the single registered student.
+
+<ParamField query="(none)" type="">
+  This endpoint accepts no query parameters or request body.
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="number">
+  Always `1` in this prototype.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Full name of the student.
+</ResponseField>
+
+<ResponseField name="career" type="string">
+  Degree programme, e.g. `"Ingeniería de Sistemas"`.
+</ResponseField>
+
+<ResponseField name="faculty" type="string">
+  Faculty name, e.g. `"Facultad de Ingeniería de Sistemas"`.
+</ResponseField>
+
+<ResponseField name="semester" type="string">
+  Current semester, e.g. `"7mo semestre"`.
+</ResponseField>
+
+<ResponseField name="gpa" type="string">
+  Grade point average as a display string, e.g. `"16.5"`.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  Institutional email address.
+</ResponseField>
+
+<ResponseField name="phone" type="string">
+  Contact phone number.
+</ResponseField>
+
+<ResponseField name="location" type="string">
+  City and country, e.g. `"Lima, Perú"`.
+</ResponseField>
+
+<ResponseField name="bio" type="string">
+  Short personal biography.
+</ResponseField>
+
+<ResponseField name="skills" type="string[]">
+  Array of skill strings, e.g. `["React", "Node.js", "Python"]`.
+</ResponseField>
+
+<ResponseField name="languages" type="array">
+  Array of language objects, each with `lang` (string) and `level` (string) fields — e.g. `[{"lang": "Español", "level": "Nativo"}]`.
+</ResponseField>
+
+<ResponseField name="certifications" type="array">
+  Array of certification objects with `name`, `issuer`, and `year` fields.
+</ResponseField>
+
+<ResponseField name="experience" type="array">
+  Array of experience entries, each containing `id`, `role`, `org`, `period`, and `desc`.
+</ResponseField>
+
+<ResponseField name="education" type="object">
+  Single education record with `degree`, `university`, and `years` fields.
+</ResponseField>
+
+<ResponseField name="savedJobs" type="number[]">
+  Array of job IDs the student has bookmarked.
+</ResponseField>
+
+### Example request
+
+```bash
+curl http://localhost:3001/api/profile/student
+```
+
+### Example response
+
+```json
+{
+  "id": 1,
+  "name": "Carlos Mendoza",
+  "career": "Ingeniería de Sistemas",
+  "faculty": "Facultad de Ingeniería de Sistemas",
+  "semester": "7mo semestre",
+  "gpa": "16.5",
+  "email": "admin@unmsm.edu.pe",
+  "phone": "+51 987 654 321",
+  "location": "Lima, Perú",
+  "bio": "Estudiante apasionado por el desarrollo web.",
+  "skills": ["React", "Node.js", "Python"],
+  "languages": [{"lang": "Español", "level": "Nativo"}],
+  "certifications": [{"name": "AWS Cloud Practitioner", "issuer": "Amazon", "year": 2024}],
+  "experience": [{"id": 1, "role": "Practicante Dev", "org": "RENIEC", "period": "2024", "desc": "Desarrollo de módulos internos."}],
+  "education": {"degree": "Ingeniería de Sistemas", "university": "UNMSM", "years": "2020 – actualidad"},
+  "savedJobs": [2, 5]
+}
+```
+
+---
+
+## PUT /api/profile/student
+
+Updates the editable fields of the student profile and returns the full updated record.
+
+<Note>
+  Only the basic contact and academic fields listed below can be updated through this endpoint. Structured fields — `experience`, `education`, `certifications`, and `languages` — are read-only in the current prototype and must be edited directly in the database if changes are needed.
+</Note>
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  Student's full name.
+</ParamField>
+
+<ParamField body="career" type="string" required>
+  Degree programme name.
+</ParamField>
+
+<ParamField body="faculty" type="string" required>
+  Faculty name.
+</ParamField>
+
+<ParamField body="semester" type="string" required>
+  Current semester as a display string, e.g. `"7mo semestre"`.
+</ParamField>
+
+<ParamField body="gpa" type="string" required>
+  Grade point average as a string.
+</ParamField>
+
+<ParamField body="email" type="string" required>
+  Institutional email address.
+</ParamField>
+
+<ParamField body="phone" type="string" required>
+  Contact phone number.
+</ParamField>
+
+<ParamField body="location" type="string" required>
+  City and country.
+</ParamField>
+
+<ParamField body="bio" type="string" required>
+  Short personal biography.
+</ParamField>
+
+<ParamField body="skills" type="string[]" required>
+  Array of skill strings to replace the current list.
+</ParamField>
+
+### Response
+
+Returns the full updated student profile object (same shape as `GET /api/profile/student`).
+
+### Example request
+
+```bash
+curl -X PUT http://localhost:3001/api/profile/student \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Carlos Mendoza",
+    "career": "Ingeniería de Sistemas",
+    "faculty": "Facultad de Ingeniería de Sistemas",
+    "semester": "7mo semestre",
+    "gpa": "16.5",
+    "email": "admin@unmsm.edu.pe",
+    "phone": "+51 987 654 321",
+    "location": "Lima, Perú",
+    "bio": "Estudiante apasionado por el desarrollo web.",
+    "skills": ["React", "Node.js", "Python"]
+  }'
+```
+
+---
+
+## GET /api/profile/company
+
+Returns the full profile of the single registered company.
+
+<ParamField query="(none)" type="">
+  This endpoint accepts no query parameters or request body.
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="number">
+  Always `1` in this prototype.
+</ResponseField>
+
+<ResponseField name="contactName" type="string">
+  Full name of the company contact person.
+</ResponseField>
+
+<ResponseField name="role" type="string">
+  Job title of the contact, e.g. `"Talent Acquisition Manager"`.
+</ResponseField>
+
+<ResponseField name="companyName" type="string">
+  Legal name of the company.
+</ResponseField>
+
+<ResponseField name="industry" type="string">
+  Industry sector, e.g. `"Recursos Humanos"`.
+</ResponseField>
+
+<ResponseField name="companyDescription" type="string">
+  Short description of the company and its mission.
+</ResponseField>
+
+<ResponseField name="website" type="string">
+  Company website URL.
+</ResponseField>
+
+<ResponseField name="initials" type="string">
+  Two-letter initials used for the company avatar.
+</ResponseField>
+
+<ResponseField name="color" type="string">
+  Hex color code for the avatar background.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  Company contact email address.
+</ResponseField>
+
+<ResponseField name="phone" type="string">
+  Company phone number.
+</ResponseField>
+
+<ResponseField name="location" type="string">
+  City and country.
+</ResponseField>
+
+<ResponseField name="bio" type="string">
+  Short public bio shown on the company profile card.
+</ResponseField>
+
+<ResponseField name="skills" type="string[]">
+  Array of skill or competency strings associated with the company or recruiter.
+</ResponseField>
+
+<ResponseField name="languages" type="array">
+  Array of language objects (same shape as the student profile).
+</ResponseField>
+
+<ResponseField name="certifications" type="array">
+  Array of certification objects (same shape as the student profile).
+</ResponseField>
+
+<ResponseField name="experience" type="array">
+  Array of experience entries for the recruiter (same shape as the student profile).
+</ResponseField>
+
+<ResponseField name="education" type="object">
+  Education record for the recruiter (same shape as the student profile).
+</ResponseField>
+
+### Example request
+
+```bash
+curl http://localhost:3001/api/profile/company
+```
+
+### Example response
+
+```json
+{
+  "id": 1,
+  "contactName": "María Fernández",
+  "role": "Talent Acquisition Manager",
+  "companyName": "TalentHub Perú",
+  "industry": "Recursos Humanos",
+  "companyDescription": "Empresa líder en reclutamiento tech.",
+  "website": "https://talenthub.pe",
+  "initials": "TH",
+  "color": "#0ea5e9",
+  "email": "maria.fernandez@talenthub.pe",
+  "phone": "+51 1 234 5678",
+  "location": "Lima, Perú",
+  "bio": "Conectamos talento universitario con empresas.",
+  "skills": ["Reclutamiento", "Entrevistas técnicas"],
+  "languages": [],
+  "certifications": [],
+  "experience": [],
+  "education": {}
+}
+```
+
+---
+
+## PUT /api/profile/company
+
+Updates the editable fields of the company profile and returns the full updated record.
+
+<Note>
+  Only one company profile exists (`id = 1`). Multi-company support is not implemented in this prototype.
+</Note>
+
+### Request body
+
+<ParamField body="contactName" type="string" required>
+  Full name of the company contact.
+</ParamField>
+
+<ParamField body="role" type="string" required>
+  Job title of the contact person.
+</ParamField>
+
+<ParamField body="companyName" type="string" required>
+  Legal name of the company.
+</ParamField>
+
+<ParamField body="industry" type="string" required>
+  Industry sector.
+</ParamField>
+
+<ParamField body="companyDescription" type="string" required>
+  Short description of the company.
+</ParamField>
+
+<ParamField body="website" type="string" required>
+  Company website URL.
+</ParamField>
+
+<ParamField body="email" type="string" required>
+  Contact email address.
+</ParamField>
+
+<ParamField body="phone" type="string" required>
+  Contact phone number.
+</ParamField>
+
+<ParamField body="location" type="string" required>
+  City and country.
+</ParamField>
+
+<ParamField body="bio" type="string" required>
+  Short public bio for the company profile.
+</ParamField>
+
+<ParamField body="skills" type="string[]" required>
+  Array of skill or competency strings to replace the current list.
+</ParamField>
+
+### Response
+
+Returns the full updated company profile object (same shape as `GET /api/profile/company`).
+
+### Example request
+
+```bash
+curl -X PUT http://localhost:3001/api/profile/company \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contactName": "María Fernández",
+    "role": "Talent Acquisition Manager",
+    "companyName": "TalentHub Perú",
+    "industry": "Recursos Humanos",
+    "companyDescription": "Empresa líder en reclutamiento tech.",
+    "website": "https://talenthub.pe",
+    "email": "maria.fernandez@talenthub.pe",
+    "phone": "+51 1 234 5678",
+    "location": "Lima, Perú",
+    "bio": "Conectamos talento universitario con empresas.",
+    "skills": ["Reclutamiento", "Entrevistas técnicas"]
+  }'
+```

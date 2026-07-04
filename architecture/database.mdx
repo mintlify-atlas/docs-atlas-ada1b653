@@ -1,0 +1,154 @@
+---
+title: "UniLink SQLite database schema and seed data"
+sidebarTitle: "Database"
+description: "UniLink uses a single SQLite file with five tables. The database is created and seeded automatically on first startup — no manual migration needed."
+---
+
+`server/data.sqlite` is a WAL-mode SQLite database managed by `better-sqlite3`. The file does not need to exist before the first run — `db.js` creates it automatically when the backend starts, executes all `CREATE TABLE IF NOT EXISTS` statements, then checks whether the `jobs` table is empty. If it is, a single atomic transaction seeds the database with 14 demo job listings, two user accounts, one student profile, and one company profile. No migration tool or manual setup step is needed.
+
+## Auto-seed behaviour
+
+When `jobCount === 0` on startup, `db.js` runs a `db.transaction()` that inserts every record from `seedData.js` in one commit. This means the seed runs only once — on the very first start. After that, the data persists across restarts in `server/data.sqlite`.
+
+The seed inserts:
+- **2 users** — one `estudiante` (`admin@unmsm.edu.pe`) and one `empresa` (`maria.fernandez@talenthub.pe`)
+- **14 jobs** — a mix of `interna` (UNMSM-posted) and `externa` (private-sector) internships
+- **1 student** — Juan Pérez, Ingeniería de Sistemas, 7° semester
+- **1 company** — María Fernández, TalentHub Perú
+
+## Tables
+
+### users
+
+Stores login credentials for both demo accounts.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER PK | |
+| email | TEXT UNIQUE | |
+| password | TEXT | Plain text — demo only, no hashing |
+| role | TEXT | `estudiante` or `empresa` |
+
+### students
+
+One row only — the single student profile (always `id = 1`).
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER PK | Always 1 |
+| name | TEXT | Profile fields |
+| career | TEXT | e.g. Ingeniería de Sistemas e Informática |
+| faculty | TEXT | |
+| semester | TEXT | e.g. 7° semestre |
+| gpa | TEXT | e.g. 15.2 |
+| email | TEXT | Contact fields |
+| phone | TEXT | |
+| location | TEXT | |
+| bio | TEXT | |
+| skills | TEXT | JSON array of skill strings |
+| languages | TEXT | JSON array of `{ lang, level }` objects |
+| certifications | TEXT | JSON array of `{ name, issuer, year }` objects |
+| experience | TEXT | JSON array of `{ id, role, org, period, desc }` objects |
+| education | TEXT | JSON object `{ degree, university, years }` |
+| savedJobs | TEXT | JSON array of saved job IDs |
+
+### companies
+
+One row only — the single company/recruiter profile (always `id = 1`). Shares the same contact and JSON-serialised columns as `students`, but replaces the student-specific fields with company fields. There is no `savedJobs` column.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER PK | Always 1 |
+| contactName | TEXT | Recruiter's name |
+| role | TEXT | Recruiter's job title |
+| companyName | TEXT | |
+| industry | TEXT | |
+| companyDescription | TEXT | |
+| website | TEXT | |
+| initials | TEXT | Two-letter avatar initials |
+| color | TEXT | Hex accent colour for the avatar |
+| email | TEXT | Contact fields |
+| phone | TEXT | |
+| location | TEXT | |
+| bio | TEXT | |
+| skills | TEXT | JSON array of skill strings |
+| languages | TEXT | JSON array of `{ lang, level }` objects |
+| certifications | TEXT | JSON array of `{ name, issuer, year }` objects |
+| experience | TEXT | JSON array of `{ id, role, org, period, desc }` objects |
+| education | TEXT | JSON object `{ degree, university, years }` |
+
+### jobs
+
+One row per internship listing. Arrays (`requirements`, `benefits`, `skills`) are stored as JSON strings.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER PK | |
+| title | TEXT | |
+| company | TEXT | Display name of the posting organisation |
+| location | TEXT | e.g. Lima, Híbrido |
+| type | TEXT | `interna` or `externa` |
+| modality | TEXT | `Presencial` / `Híbrido` / `Remoto` |
+| area | TEXT | e.g. Tecnología, Finanzas, Legal |
+| salary | TEXT | Formatted string, e.g. S/ 1,800 / mes |
+| salaryNum | INTEGER | Numeric salary for range filtering |
+| posted | TEXT | Human-readable string, e.g. Hace 2 días |
+| deadline | TEXT | ISO date string YYYY-MM-DD |
+| daysAgo | INTEGER | Days since posted, used for recency filter |
+| duration | TEXT | e.g. 3 meses, 6 meses |
+| hoursPerWeek | INTEGER | Weekly commitment |
+| status | TEXT | `abierto` / `por_cerrar` / `cerrado` |
+| description | TEXT | Full job description |
+| requirements | TEXT | JSON array of requirement strings |
+| benefits | TEXT | JSON array of benefit strings |
+| skills | TEXT | JSON array of required skill strings |
+| applicants | INTEGER | Applicant count (display only) |
+| postedBy | TEXT | Email of the empresa account that created the listing; `null` for seeded jobs |
+
+### applications
+
+One row per student application. The student ID is always 1 in the current prototype.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER PK AUTOINCREMENT | |
+| studentId | INTEGER | FK to `students.id` (always 1) |
+| jobId | INTEGER | FK to `jobs.id` |
+| status | TEXT | `en_revision` / `entrevista` / `rechazado` / `aceptado` |
+| appliedDate | TEXT | ISO date YYYY-MM-DD |
+
+## JSON column pattern
+
+The `students`, `companies`, and `jobs` tables store arrays and nested objects as JSON strings. `db.js` serialises them with `JSON.stringify()` before every `INSERT` or `UPDATE`, and the route handlers in `index.js` deserialise them with `JSON.parse()` before returning responses to the client:
+
+```js server/index.js
+function parseJob(row) {
+  if (!row) return row
+  return {
+    ...row,
+    requirements: JSON.parse(row.requirements),
+    benefits: JSON.parse(row.benefits),
+    skills: JSON.parse(row.skills),
+  }
+}
+```
+
+This avoids the complexity of normalising these fields into separate tables while keeping the SQLite schema flat and easy to inspect.
+
+## Resetting the database
+
+<Tip>
+  To wipe all data and reseed from scratch: stop the backend, delete
+  `server/data.sqlite` (and `server/data.sqlite-wal` / `server/data.sqlite-shm`
+  if they exist), then restart with `npm run dev`. The seed transaction runs
+  automatically on the next startup.
+</Tip>
+
+## Inspecting the database
+
+<Note>
+  Any SQLite client can read `server/data.sqlite` while the backend is stopped.
+  Options include IntelliJ Ultimate's built-in Database tool (*Data Source → SQLite*),
+  DB Browser for SQLite, or the `sqlite3` CLI. Point the client at
+  `server/data.sqlite` in the repo root.
+</Note>
